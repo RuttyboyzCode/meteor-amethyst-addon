@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "meteor-amethyst",
+  "version": "${version}",
+  "name": "Amethyst",
+  "description": "General utility mod for Dupe Anarchy | Probably does something.",
+  "authors": [
+    "nyphrux"
+  ],
+  "icon": "assets/template/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "meteor": [
+      "me.nyphrux.amethyst.Main"
+    ]
+  },
+  "mixins": [
+    "mixins.json"
+  ],
+  "custom": {
+    "meteor-client:color": "245,152,255"
+  },
+  "depends": {
+    "java": ">=21",
+    "minecraft": ["${mc_version}"],
+    "meteor-client": "*"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "me.nyphrux.amethyst.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "client": [
+    "ModuleScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "ModuleMixin"
+  ]
+}
