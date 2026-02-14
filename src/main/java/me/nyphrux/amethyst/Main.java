@@ -18,7 +18,7 @@ public class Main extends MeteorAddon {
         Modules.get().add(new Twerkin());
         Modules.get().add(new ChatPrefixModifier());
         Modules.get().add(new ProFlight());
-        // Modules.get().add(new ScaffoldPro()); <- I CANT FUCKING CODE SCAFFOLD HELP :sob:
+        Modules.get().add(new ProScaffold());
 
         Commands.add(new SearchCommand());
     }
