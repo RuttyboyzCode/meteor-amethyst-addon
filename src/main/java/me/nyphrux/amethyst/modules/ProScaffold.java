@@ -1,11 +1,14 @@
 package me.nyphrux.amethyst.modules;
 
 import me.nyphrux.amethyst.Main;
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
+import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import net.minecraft.block.BlockState;
@@ -22,6 +25,7 @@ import java.util.ArrayList;
 public class ProScaffold extends Module {
 
     private final SettingGroup sgGeneral  = settings.getDefaultGroup();
+    private final SettingGroup sgRender = settings.createGroup("Render");
 
     private final Setting<List<Block>> blocks = sgGeneral.add(new BlockListSetting.Builder()
         .name("blocks")
@@ -75,8 +79,49 @@ public class ProScaffold extends Module {
         .build()
     );
 
+    private final Setting<Boolean> render = sgRender.add(new BoolSetting.Builder()
+        .name("render")
+        .description("Renders the blocks that will be placed.")
+        .defaultValue(true)
+        .build()
+    );
+
+    private final Setting<ShapeMode> shapeMode = sgRender.add(new EnumSetting.Builder<ShapeMode>()
+        .name("shape-mode")
+        .description("How the shapes are rendered.")
+        .defaultValue(ShapeMode.Both)
+        .visible(render::get)
+        .build()
+    );
+
+    private final Setting<SettingColor> sideColor = sgRender.add(new ColorSetting.Builder()
+        .name("side-color")
+        .description("The side color of the target block rendering.")
+        .defaultValue(new SettingColor(197, 137, 232, 10))
+        .visible(render::get)
+        .build()
+    );
+
+    private final Setting<SettingColor> lineColor = sgRender.add(new ColorSetting.Builder()
+        .name("line-color")
+        .description("The line color of the target block rendering.")
+        .defaultValue(new SettingColor(197, 137, 232))
+        .visible(render::get)
+        .build()
+    );
+
+    private final Setting<Integer> fadeTime = sgRender.add(new IntSetting.Builder()
+        .name("fade-time")
+        .description("How long placed blocks stay rendered.")
+        .defaultValue(10)
+        .sliderRange(1, 40)
+        .visible(render::get)
+        .build()
+    );
+
     private int timer = 0;
     private int firstPlace;
+    private final List<FadeBlock> fadeBlocks = new ArrayList<>();
 
     public ProScaffold() {
         super(Main.CATEGORY, "pro-scaffold", "An improved scaffold that can place blocks in a radius around you.");
@@ -128,15 +173,62 @@ public class ProScaffold extends Module {
         }
 
         blocksToPlace = blocksToPlace > bpt.get() ? bpt.get() : blocksToPlace;
+
         for (BlockPos bp : bpProvider(mc.player.getBlockPos(), radius.get(), y)) {
-            if (blocksToPlace <= 0) return;
-            placeBlock(bp, slot);
-            blocksToPlace--;
+            if (blocksToPlace <= 0) break;
+
+            if (mc.world.getBlockState(bp).isReplaceable()) {
+                if (placeBlock(bp, slot)) {
+                    fadeBlocks.add(new FadeBlock(bp, fadeTime.get()));
+                    blocksToPlace--;
+                }
+            }
+        }
+
+            fadeBlocks.removeIf(fadeBlock -> {
+                fadeBlock.ticks--;
+                return fadeBlock.ticks <= 0;
+            });
+        }
+
+    private static class FadeBlock {
+        public BlockPos pos;
+        public int ticks;
+
+        public FadeBlock(BlockPos pos, int ticks) {
+            this.pos = pos;
+            this.ticks = ticks;
         }
     }
 
-    private void placeBlock(BlockPos blockpos, int slot) {
-        BlockUtils.place(blockpos, Hand.MAIN_HAND, slot, false, 50, false, true, false);
+    @EventHandler
+    private void onRender(Render3DEvent event) {
+        if (!render.get()) return;
+
+        for (FadeBlock fadeBlock : fadeBlocks) {
+
+            float progress = (float) fadeBlock.ticks / fadeTime.get();
+            progress = progress * progress;
+            int alpha = (int) (sideColor.get().a * progress);
+
+            event.renderer.box(
+                fadeBlock.pos,
+                new SettingColor(
+                    sideColor.get().r,
+                    sideColor.get().g,
+                    sideColor.get().b,
+                    alpha
+                ),
+                lineColor.get(),
+                shapeMode.get(),
+                0
+            );
+        }
+    }
+
+
+    private boolean placeBlock(BlockPos blockpos, int slot) {
+        return BlockUtils.place(blockpos, Hand.MAIN_HAND, slot, false, 50, false, true, false);
     }
 
     public List<BlockPos> bpProvider(BlockPos centerPos, int radius, int height) {
