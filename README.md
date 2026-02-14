@@ -5,6 +5,7 @@
 
 <h1 align="center">Amethyst</h1>
 <p align="center">General utility mod for Dupe Anarchy | Probably does something.</p>
+<p align="center">Currently only supporting <b>1.21.4</b>.</p>
 
 ---
 

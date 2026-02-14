@@ -1,6 +1,7 @@
 package me.nyphrux.amethyst.modules;
 
 import me.nyphrux.amethyst.Main;
+import me.nyphrux.amethyst.util.ModuleCreditsIntergration;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -24,12 +25,7 @@ import meteordevelopment.meteorclient.utils.render.WireframeEntityRenderer;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 
-
-
-
 import java.util.Set;
-
-import static meteordevelopment.meteorclient.systems.modules.render.ESP.Mode.Glow;
 
 public class InfAura extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -38,8 +34,6 @@ public class InfAura extends Module {
     private final SettingGroup sgRender = settings.createGroup("Render");
     private Vec3d lastTargetPos = null;
 
-
-    // General Settings
     private final Setting<Double> range = sgGeneral.add(new DoubleSetting.Builder()
         .name("range")
         .description("Attack range.")
@@ -154,16 +148,15 @@ public class InfAura extends Module {
     private int attackTimer;
     private Vec3d originalPos;
     private boolean isAttacking;
-    private static final double HORIZONTAL_SPEED = 100.0;
     private static final double STEP_DISTANCE = 5.0;
     private int prevSlot = -1;
     private long lastAttackTime = 0;
     private static final long LINE_DISPLAY_TIME_MS = 1500;
     private Entity lastTargetEntity = null;
 
-
     public InfAura() {
         super(Main.CATEGORY, "inf-aura", "Attacks entities from any distance.");
+        ((ModuleCreditsIntergration)this).setCredits("Ruttyboyz (Making the module)");
     }
 
     @Override
@@ -251,8 +244,6 @@ public class InfAura extends Module {
     private boolean shouldSkipPlayer(PlayerEntity player) {
         return !Friends.get().shouldAttack(player);
     }
-
-
 
     private void attackEntity(Entity target) {
         isAttacking = true;
@@ -387,9 +378,6 @@ public class InfAura extends Module {
         }
     }
 
-
-
-
     private void sendPositionPacket(double x, double y, double z, boolean onGround) {
         try {
             mc.player.networkHandler.sendPacket(new PlayerMoveC2SPacket.PositionAndOnGround(x, y, z, onGround, false));
@@ -397,6 +385,7 @@ public class InfAura extends Module {
             System.out.println("[InfAura] Failed to send packet: " + t);
         }
     }
+
     public enum TargetEspMode {
         Wireframe,
         Box,
