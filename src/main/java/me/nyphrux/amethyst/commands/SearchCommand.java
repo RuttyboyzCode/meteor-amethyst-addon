@@ -56,7 +56,7 @@ public class SearchCommand extends Command {
                     if (entity.getType() == type) count++;
                 }
 
-                ChatUtils.info("There are %d %s%s in your render distance.",
+                ChatUtils.info("There is %d %s%s in your render distance.",
                     count,
                     input,
                     count == 1 ? "" : "s"
