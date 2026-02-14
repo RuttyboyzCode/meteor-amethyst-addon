@@ -11,7 +11,7 @@ import net.minecraft.item.ItemStack;
 public class AntiDiscordSRV extends Module {
 
     public AntiDiscordSRV() {
-        super(Main.CATEGORY, "AntiDiscordSRV", "Hides you're chat from discord SRV");
+        super(Main.CATEGORY, "AntiDiscordSRV", "Hides your chat messages from Discord SRV");
     }
 
     private String queuedMessage = null;
@@ -74,5 +74,13 @@ public class AntiDiscordSRV extends Module {
             renameBack = originalName;
             messageDelayTicks = 2;
         }
+    }
+
+    @Override
+    public WWidget getWidget(GuiTheme theme) {
+        WVerticalList list = theme.verticalList();
+        list.add(theme.label("This module abuses the show-item-in-chat system.")).widget();
+        list.add(theme.label("WARNING: All your messages will show your held item at the end.")).widget();
+        return list;
     }
 }
