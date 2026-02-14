@@ -20,6 +20,7 @@ public class Main extends MeteorAddon {
         Modules.get().add(new ProFlight());
         Modules.get().add(new ProScaffold());
         Modules.get().add(new InfAura());
+        Modules.get().add(new AntiDiscordSRV());
 
         Commands.add(new SearchCommand());
     }
