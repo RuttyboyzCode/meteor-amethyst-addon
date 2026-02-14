@@ -60,14 +60,14 @@ public class ProScaffold extends Module {
     private final Setting<Integer> delay = sgGeneral.add(new IntSetting.Builder()
         .name("delay")
         .description("The delay in between places.")
-        .defaultValue(0)
+        .defaultValue(1)
         .build()
     );
 
     private final Setting<Integer> bpt = sgGeneral.add(new IntSetting.Builder()
         .name("blocks pet tick")
         .description("The maximum amount of blocks to place each tick.")
-        .defaultValue(5)
+        .defaultValue(2)
         .sliderRange(0, 20)
         .build()
     );
