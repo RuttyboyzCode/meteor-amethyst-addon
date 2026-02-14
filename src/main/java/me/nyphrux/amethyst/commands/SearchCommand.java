@@ -2,6 +2,7 @@ package me.nyphrux.amethyst.commands;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 
 import meteordevelopment.meteorclient.commands.Command;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
@@ -19,6 +20,21 @@ public class SearchCommand extends Command {
     @Override
     public void build(LiteralArgumentBuilder<CommandSource> builder) {
         builder.then(argument("entity", StringArgumentType.word())
+            .suggests((ctx, suggestions) -> {
+                String remaining = suggestions.getRemaining().toLowerCase();
+
+                Registries.ENTITY_TYPE.getIds().forEach(id -> {
+                    if (!id.getNamespace().equals("minecraft")) return;
+
+                    String name = id.getPath();
+                    if (remaining.isEmpty() || name.startsWith(remaining)) {
+                        suggestions.suggest(name);
+                    }
+                });
+
+                return suggestions.buildFuture();
+            })
+
             .executes(ctx -> {
                 if (mc.world == null) {
                     ChatUtils.error("You are not in a world.");
@@ -49,5 +65,24 @@ public class SearchCommand extends Command {
                 return 1;
             })
         );
+    }
+
+    private static com.mojang.brigadier.suggestion.Suggestions suggestEntities(SuggestionsBuilder builder) {
+        String remaining = builder.getRemaining().toLowerCase();
+
+        Registries.ENTITY_TYPE.getIds().forEach(id -> {
+            if (!id.getNamespace().equals("minecraft")) return;
+
+            String name = id.getPath();
+            if (name.startsWith(remaining)) {
+                builder.suggest(name);
+            }
+
+            if (remaining.isEmpty() || name.startsWith(remaining)) {
+                builder.suggest(name);
+            }
+        });
+
+        return builder.build();
     }
 }

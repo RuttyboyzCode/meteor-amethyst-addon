@@ -1,9 +1,6 @@
 package me.nyphrux.amethyst.modules;
 
 import me.nyphrux.amethyst.Main;
-import meteordevelopment.meteorclient.gui.GuiTheme;
-import meteordevelopment.meteorclient.gui.widgets.WWidget;
-import meteordevelopment.meteorclient.gui.widgets.containers.WVerticalList;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -51,7 +48,7 @@ public class ProScaffold extends Module {
 
     private final Setting<Integer> radius = sgGeneral.add(new IntSetting.Builder()
         .name("radius")
-        .description("The radius of the bonemeal action")
+        .description("The radius of the block placing")
         .defaultValue(3)
         .build()
     );
@@ -75,26 +72,6 @@ public class ProScaffold extends Module {
         .name("air place")
         .description("Places blocks with no support.")
         .defaultValue(false)
-        .build()
-    );
-    private final Setting<Boolean> Slabmode = sgGeneral.add(new BoolSetting.Builder()
-        .name("Slabmode")
-        .description("support for placing slabs.")
-        .defaultValue(false)
-        .build()
-    );
-    private final Setting<Boolean> Up = sgGeneral.add(new BoolSetting.Builder()
-        .name("Upper slab")
-        .description("Place the slab on the upper half of the block.")
-        .defaultValue(false)
-        .visible(() -> Slabmode.get())
-        .build()
-    );
-    private final Setting<Boolean> Down = sgGeneral.add(new BoolSetting.Builder()
-        .name("Lower slab")
-        .description("Place the slab on the lower half of the block.")
-        .defaultValue(false)
-        .visible(() -> Slabmode.get())
         .build()
     );
 
@@ -163,15 +140,28 @@ public class ProScaffold extends Module {
     }
 
     public List<BlockPos> bpProvider(BlockPos centerPos, int radius, int height) {
-        if (airPlace.get()) {
-            return getSphere(centerPos, radius, height);
-        }
         List<BlockPos> blocks = new ArrayList<>();
-        for (BlockPos bp : getSphere(centerPos, radius, height)) {
-            if (validPlace(bp)) {
-                blocks.add(bp);
+
+        if (airPlace.get()) {
+            blocks = getSphere(centerPos, radius, height);
+        } else {
+            for (BlockPos bp : getSphere(centerPos, radius, height)) {
+                if (validPlace(bp)) {
+                    blocks.add(bp);
+                }
             }
         }
+
+        if (yMode.get() == Mode.UNDER) {
+            blocks.sort((pos1, pos2) -> {
+                double dist1 = Math.sqrt(Math.pow(pos1.getX() - centerPos.getX(), 2) +
+                    Math.pow(pos1.getZ() - centerPos.getZ(), 2));
+                double dist2 = Math.sqrt(Math.pow(pos2.getX() - centerPos.getX(), 2) +
+                    Math.pow(pos2.getZ() - centerPos.getZ(), 2));
+                return Double.compare(dist1, dist2);
+            });
+        }
+
         return blocks;
     }
 
@@ -210,12 +200,5 @@ public class ProScaffold extends Module {
         UNDER,
         FIRST_PLACE,
         STATIC
-    }
-
-    @Override
-    public WWidget getWidget(GuiTheme theme) {
-        WVerticalList list = theme.verticalList();
-        list.add(theme.label("Scaffold upwards is broken right now.")).widget();
-        return list;
     }
 }
