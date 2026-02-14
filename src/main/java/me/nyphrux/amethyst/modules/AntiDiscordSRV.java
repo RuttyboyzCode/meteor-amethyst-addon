@@ -34,7 +34,15 @@ public class AntiDiscordSRV extends Module {
     );
 
     public AntiDiscordSRV() {
-        super(Main.CATEGORY, "anti-discordSRV", "Hides your messages from DiscordSRV so they dont get sent to #dupe-anarchy-chat.");
+        super(Main.CATEGORY, "anti-discordSRV", "Hides your messages from DiscordSRV.");
+    }
+
+    @Override
+    public WWidget getWidget(GuiTheme theme) {
+        WVerticalList list = theme.verticalList();
+        list.add(theme.label("This module abuses the show-item-in-chat system.")).widget();
+        list.add(theme.label("WARNING: All your messages will show your held item at the end.")).widget();
+        return list;
     }
 
     @EventHandler
@@ -56,15 +64,5 @@ public class AntiDiscordSRV extends Module {
             case Full -> "[item]";
             case Minimal -> "[i]";
         };
-    }
-
-    @Override
-    public WWidget getWidget(GuiTheme theme) {
-        WVerticalList list = theme.verticalList();
-        list.add(theme.label("This module abuses the show-item-in-chat system.")).widget();
-        list.add(theme.label("WARNING: All your messages will show your held item at the end.")).widget();
-        list.add(theme.label("!^ To avoid this, rename your held item to '&r'")).widget();
-        list.add(theme.label("(I will make a bypass for this soon)")).widget();
-        return list;
     }
 }

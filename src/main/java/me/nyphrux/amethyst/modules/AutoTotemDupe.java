@@ -48,20 +48,63 @@ public class AutoTotemDupe extends Module {
     );
 
     public AutoTotemDupe() {
-        super(Main.CATEGORY, "auto-totem-dupe", "Automatically dupes totems based on inventory conditions.");
+        super(Main.CATEGORY, "auto-totem-dupe", "Automatically dupes totems making you invincible.");
         ((ModuleCreditsIntergration)this).setCredits("Wim (Making it)");
         // Wim made the module in an obfuscated meteor addon. I "blind skidded" it and made this shit.
     }
 
     private boolean inUse; // lowk made this so it doesnt kill itself but its useless
+    private DupeStep step = DupeStep.DONE;
+    private int delayTicks;
+    private int cachedTotemSlot;
+    private int cachedHotbarSlot;
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
         if (mc.player == null || mc.world == null) return;
+
+        if (step != DupeStep.DONE) {
+            if (delayTicks > 0) {
+                delayTicks--;
+                return;
+            }
+
+            int screenHandlerSlot = 36 + cachedHotbarSlot;
+
+            switch (step) {
+                case MOVE_IN -> {
+                    click(cachedTotemSlot);
+                    click(screenHandlerSlot);
+                    click(cachedTotemSlot);
+
+                    step = DupeStep.DUPE;
+                    delayTicks = 1;
+                }
+
+                case DUPE -> {
+                    mc.player.networkHandler.sendChatCommand("dupe " + dupeAmount.get());
+
+                    step = DupeStep.MOVE_OUT;
+                    delayTicks = 1;
+                }
+
+                case MOVE_OUT -> {
+                    click(cachedTotemSlot);
+                    click(screenHandlerSlot);
+                    click(cachedTotemSlot);
+
+                    mc.player.getInventory().selectedSlot = cachedHotbarSlot;
+                    step = DupeStep.DONE;
+                    inUse = false;
+                }
+            }
+
+            return;
+        }
+
         if (inUse) return;
 
         int totems = countTotemsInInv();
-
         if (!alwaysDupe.get() && totems > dupeWhen.get()) return;
 
         FindItemResult totem = InvUtils.find(Items.TOTEM_OF_UNDYING);
@@ -76,62 +119,10 @@ public class AutoTotemDupe extends Module {
         }
 
         inUse = true;
-        int oldSlot = selectedHotbarSlot;
-
-        mc.interactionManager.clickSlot(
-            mc.player.currentScreenHandler.syncId,
-            totem.slot(),
-            0,
-            SlotActionType.PICKUP,
-            mc.player
-        );
-
-        mc.interactionManager.clickSlot(
-            mc.player.currentScreenHandler.syncId,
-            screenHandlerSlot,
-            0,
-            SlotActionType.PICKUP,
-            mc.player
-        );
-
-        mc.interactionManager.clickSlot(
-            mc.player.currentScreenHandler.syncId,
-            totem.slot(),
-            0,
-            SlotActionType.PICKUP,
-            mc.player
-        );
-
-        mc.player.networkHandler.sendChatCommand("dupe " + dupeAmount.get());
-
-        mc.execute(() -> {
-            mc.interactionManager.clickSlot(
-                mc.player.currentScreenHandler.syncId,
-                totem.slot(),
-                0,
-                SlotActionType.PICKUP,
-                mc.player
-            );
-
-            mc.interactionManager.clickSlot(
-                mc.player.currentScreenHandler.syncId,
-                screenHandlerSlot,
-                0,
-                SlotActionType.PICKUP,
-                mc.player
-            );
-
-            mc.interactionManager.clickSlot(
-                mc.player.currentScreenHandler.syncId,
-                totem.slot(),
-                0,
-                SlotActionType.PICKUP,
-                mc.player
-            );
-
-            mc.player.getInventory().selectedSlot = oldSlot;
-            inUse = false;
-        });
+        cachedTotemSlot = totem.slot();
+        cachedHotbarSlot = selectedHotbarSlot;
+        step = DupeStep.MOVE_IN;
+        delayTicks = 0;
     }
 
     private int countTotemsInInv() {
@@ -142,5 +133,22 @@ public class AutoTotemDupe extends Module {
             }
         }
         return count;
+    }
+
+    private void click(int slot) {
+        mc.interactionManager.clickSlot(
+            mc.player.currentScreenHandler.syncId,
+            slot,
+            0,
+            SlotActionType.PICKUP,
+            mc.player
+        );
+    }
+
+    private enum DupeStep {
+        MOVE_IN,
+        DUPE,
+        MOVE_OUT,
+        DONE
     }
 }
