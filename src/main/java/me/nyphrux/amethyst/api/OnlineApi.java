@@ -19,7 +19,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class OnlineApi implements ClientModInitializer {
-    private static final String API_URL = "https://amethyst.nyphryx.workers.dev/api";
+    private static final String API_URL = "https://amethyst.nyphrux.workers.dev/api";
     private static final Set<String> onlinePlayers = new HashSet<>();
     private static Timer updateTimer;
     private static final HttpClient httpClient = HttpClient.newHttpClient();
@@ -126,6 +126,14 @@ public class OnlineApi implements ClientModInitializer {
         try {
             LogUtils.getLogger().info("Fetching online players...");
             String response = Http.get(API_URL + "/online").sendString();
+
+            if (response == null || response.isEmpty()) {
+                LogUtils.getLogger().warn("Received null or empty response from API");
+                return;
+            }
+
+            LogUtils.getLogger().info("API Response: {}", response);
+
             JsonArray jsonArray = JsonParser.parseString(response).getAsJsonArray();
 
             synchronized (onlinePlayers) {
@@ -137,7 +145,7 @@ public class OnlineApi implements ClientModInitializer {
                 LogUtils.getLogger().info("Fetched {} online players", onlinePlayers.size());
             }
         } catch (Exception e) {
-            LogUtils.getLogger().error("Failed to fetch online players: {}", e.getMessage());
+            LogUtils.getLogger().error("Failed to fetch online players: {}", e.getMessage(), e);
         }
     }
 
