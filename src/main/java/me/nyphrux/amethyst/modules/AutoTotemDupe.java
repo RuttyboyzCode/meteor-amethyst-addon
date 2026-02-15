@@ -47,6 +47,17 @@ public class AutoTotemDupe extends Module {
         .build()
     );
 
+    private final Setting<Integer> dupeDelay = sgGeneral.add(new IntSetting.Builder()
+        .name("dupe-delay")
+        .description("Delay between actions (In ticks) [Ideal: 1-4]")
+        .defaultValue(1)
+        .sliderMin(0)
+        .sliderMax(20)
+        .min(0)
+        .max(20)
+        .build()
+    );
+
     public AutoTotemDupe() {
         super(Main.CATEGORY, "auto-totem-dupe", "Automatically dupes totems making you invincible.");
         ((ModuleCreditsIntergration)this).setCredits("Wim (Making it)");
@@ -78,14 +89,21 @@ public class AutoTotemDupe extends Module {
                     click(cachedTotemSlot);
 
                     step = DupeStep.DUPE;
-                    delayTicks = 1;
+                    delayTicks = dupeDelay.get();
                 }
 
                 case DUPE -> {
                     mc.player.networkHandler.sendChatCommand("dupe " + dupeAmount.get());
 
                     step = DupeStep.MOVE_OUT;
-                    delayTicks = 1;
+                    delayTicks = dupeDelay.get();
+                }
+
+                case SECOND_DUPE -> {
+                    mc.player.networkHandler.sendChatCommand("dupe " + dupeAmount.get());
+
+                    step = DupeStep.MOVE_OUT;
+                    delayTicks = dupeDelay.get();
                 }
 
                 case MOVE_OUT -> {
@@ -148,6 +166,7 @@ public class AutoTotemDupe extends Module {
     private enum DupeStep {
         MOVE_IN,
         DUPE,
+        SECOND_DUPE, // Safety dupe in case initial fails.
         MOVE_OUT,
         DONE
     }

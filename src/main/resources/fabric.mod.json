@@ -7,7 +7,7 @@
   "authors": [
     "nyphrux"
   ],
-  "icon": "assets/template/icon.png",
+  "icon": "assets/amethyst/icon.png",
   "environment": "client",
   "entrypoints": {
     "meteor": [

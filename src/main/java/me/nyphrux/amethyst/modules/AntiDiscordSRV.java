@@ -8,6 +8,7 @@ import meteordevelopment.meteorclient.gui.widgets.WWidget;
 import meteordevelopment.meteorclient.gui.widgets.containers.WVerticalList;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
+import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.item.ItemStack;
 
@@ -82,6 +83,7 @@ public class AntiDiscordSRV extends Module {
     @Override
     public WWidget getWidget(GuiTheme theme) {
         WVerticalList list = theme.verticalList();
+        list.add(theme.label("WARNING: Module is patched, we'll keep it here but idk if itl get unpatched.")).widget().color(Color.RED);
         list.add(theme.label("This module abuses the show-item-in-chat system.")).widget();
         list.add(theme.label("WARNING: All your messages will show your held item at the end.")).widget();
         return list;
