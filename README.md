@@ -15,6 +15,20 @@
 - Go to the releases page [[Click]](https://github.com/nyphrux/meteor-amethyst-addon/releases/latest)
 - Download the latest release (*.jar)
 
+---
+
+<h1 align="center">Future Plans</h1>
+
+### API
+- Built in IRC client (Private messaging)
+- Improved status API
+
+### Modules
+- Improve Auto Totem & move it into Auto Totem Dupe
+
+### General
+- Stonecutter/Multiversions
+
 --- 
 
 <h1 align="center">Credits</h1>
