@@ -1,5 +1,6 @@
 package me.nyphrux.amethyst;
 
+import me.nyphrux.amethyst.api.OnlineApi;
 import me.nyphrux.amethyst.commands.*;
 import me.nyphrux.amethyst.hud.CatHud;
 import me.nyphrux.amethyst.hud.LogoHud;
@@ -18,8 +19,11 @@ public class Main extends MeteorAddon {
     public static final HudGroup HUD = new HudGroup("Amethyst");
 
 
+
     @Override
     public void onInitialize() {
+
+        new OnlineApi().onInitializeClient();
         Modules.get().add(new AutoTotemDupe());
         Modules.get().add(new Twerkin());
         Modules.get().add(new ChatPrefixModifier());

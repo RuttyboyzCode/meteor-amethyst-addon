@@ -24,6 +24,7 @@ dependencies {
     minecraft("com.mojang:minecraft:${properties["minecraft_version"] as String}")
     mappings("net.fabricmc:yarn:${properties["yarn_mappings"] as String}:v2")
     modImplementation("net.fabricmc:fabric-loader:${properties["loader_version"] as String}")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:0.110.5+1.21.4")
 
     // Meteor
     modImplementation("meteordevelopment:meteor-client:${properties["minecraft_version"] as String}-SNAPSHOT")

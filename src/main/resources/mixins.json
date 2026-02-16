@@ -3,7 +3,8 @@
   "package": "me.nyphrux.amethyst.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
-    "ModuleScreenMixin"
+    "ModuleScreenMixin",
+    "PlayerListMixin"
   ],
   "injectors": {
     "defaultRequire": 1

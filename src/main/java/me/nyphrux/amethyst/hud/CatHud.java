@@ -1,6 +1,7 @@
 package me.nyphrux.amethyst.hud;
 
 import me.nyphrux.amethyst.Main;
+import meteordevelopment.meteorclient.settings.BoolSetting;
 import meteordevelopment.meteorclient.settings.DoubleSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
@@ -16,6 +17,7 @@ import net.minecraft.util.Identifier;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.util.concurrent.CompletableFuture;
 
 public class CatHud extends HudElement {
     public static final HudElementInfo<CatHud> INFO = new HudElementInfo<>(
@@ -43,8 +45,16 @@ public class CatHud extends HudElement {
         .build()
     );
 
+    private final Setting<Boolean> message = sgGeneral.add(new BoolSetting.Builder()
+        .name("message")
+        .description("Sends a message in chat when a new cat image is loaded.")
+        .defaultValue(true)
+        .build()
+    );
+
     private Identifier texture;
     private long lastReload;
+    private boolean isLoading = false;
 
     public CatHud() {
         super(INFO);
@@ -53,9 +63,8 @@ public class CatHud extends HudElement {
 
     @Override
     public void tick(HudRenderer renderer) {
-        if (System.currentTimeMillis() - lastReload >= delay.get() * 1000) {
+        if (!isLoading && System.currentTimeMillis() - lastReload >= delay.get() * 1000) {
             reload();
-            ChatUtils.info("New cat image! Woaaa :3");
         }
     }
 
@@ -69,16 +78,39 @@ public class CatHud extends HudElement {
     }
 
     private void reload() {
-        try {
-            InputStream in = new URL("https://cataas.com/cat").openStream();
-            NativeImage image = NativeImage.read(in);
-            NativeImageBackedTexture tex = new NativeImageBackedTexture(image);
+        if (isLoading) return;
+        isLoading = true;
 
-            Identifier id = Identifier.of("amethyst", "cat_hud");
-            MinecraftClient.getInstance().getTextureManager().registerTexture(id, tex);
+        CompletableFuture.runAsync(() -> {
+            try {
+                InputStream in = new URL("https://cataas.com/cat").openStream();
+                NativeImage image = NativeImage.read(in);
+                in.close();
 
-            texture = id;
-            lastReload = System.currentTimeMillis();
-        } catch (Exception ignored) {}
+                MinecraftClient.getInstance().execute(() -> {
+                    try {
+                        NativeImageBackedTexture tex = new NativeImageBackedTexture(image);
+                        Identifier id = Identifier.of("amethyst", "cat_hud_" + System.currentTimeMillis());
+                        MinecraftClient.getInstance().getTextureManager().registerTexture(id, tex);
+
+                        if (texture != null) {
+                            MinecraftClient.getInstance().getTextureManager().destroyTexture(texture);
+                        }
+
+                        texture = id;
+                        lastReload = System.currentTimeMillis();
+                        if (message.get()) {
+                            ChatUtils.info("New cat image! Woaaa :3");
+                        }
+                        } catch (Exception e) {
+                        image.close();
+                    } finally {
+                        isLoading = false;
+                    }
+                });
+            } catch (Exception e) {
+                isLoading = false;
+            }
+        });
     }
 }
