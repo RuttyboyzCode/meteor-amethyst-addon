@@ -77,7 +77,7 @@ public class CatHud extends HudElement {
         renderer.texture(texture, x, y, size, size, Color.WHITE);
     }
 
-    private void reload() {
+    public void reload() {
         if (isLoading) return;
         isLoading = true;
 

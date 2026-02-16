@@ -2,6 +2,7 @@ package me.nyphrux.amethyst.api;
 
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.utils.network.Http;
+import me.nyphrux.amethyst.Main;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -28,44 +29,30 @@ public class OnlineApi implements ClientModInitializer {
     public void onInitializeClient() {
         LogUtils.getLogger().info("Online API initialized.");
 
-        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> {
-            LogUtils.getLogger().info("Player joined world, starting online tracking.");
-            startOnlineTracking();
-        });
-
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
-            LogUtils.getLogger().info("Player disconnected, stopping online tracking.");
-            stopOnlineTracking();
-        });
-
+        ClientPlayConnectionEvents.JOIN.register((handler, sender, client) -> startOnlineTracking());
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> stopOnlineTracking());
         ClientLifecycleEvents.CLIENT_STOPPING.register(this::onShutdown);
     }
 
     private void startOnlineTracking() {
         MinecraftClient client = MinecraftClient.getInstance();
-        if (client.player == null) {
-            LogUtils.getLogger().warn("Player is null, cannot start tracking.");
-            return;
-        }
+        if (client.player == null) return;
 
         String uuid = client.player.getUuidAsString();
         String username = client.player.getName().getString();
 
-        LogUtils.getLogger().info("Starting tracking for player: {} ({})", username, uuid);
-
-        setOnline(uuid, username);
-
-        if (updateTimer != null) {
-            updateTimer.cancel();
+        if (!Main.hiddenFromAPI) {
+            setOnline(uuid, username);
         }
 
+        if (updateTimer != null) updateTimer.cancel();
         updateTimer = new Timer();
         updateTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 fetchOnlinePlayers();
             }
-        }, 0, 30000);
+        }, 0, 30_000);
     }
 
     private void stopOnlineTracking() {
@@ -76,15 +63,13 @@ public class OnlineApi implements ClientModInitializer {
             updateTimer = null;
         }
 
-        if (client.player != null) {
-            String uuid = client.player.getUuidAsString();
-            setOffline(uuid);
+        if (client.player != null && !Main.hiddenFromAPI) {
+            setOffline(client.player.getUuidAsString());
         }
     }
 
     private void setOnline(String uuid, String username) {
         try {
-            LogUtils.getLogger().info("Setting online status for: {}", username);
             String json = "{ \"uuid\": \"" + uuid + "\", \"username\": \"" + username + "\", \"status\": \"online\" }";
 
             HttpRequest request = HttpRequest.newBuilder()
@@ -94,9 +79,7 @@ public class OnlineApi implements ClientModInitializer {
                 .build();
 
             httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenAccept(response -> {
-                    LogUtils.getLogger().info("Online status set. Response: {}", response.statusCode());
-                });
+                .thenAccept(response -> LogUtils.getLogger().info("Online status set. Response: {}", response.statusCode()));
         } catch (Exception e) {
             LogUtils.getLogger().error("Failed to set online status: {}", e.getMessage());
         }
@@ -104,7 +87,6 @@ public class OnlineApi implements ClientModInitializer {
 
     private void setOffline(String uuid) {
         try {
-            LogUtils.getLogger().info("Setting offline status for: {}", uuid);
             String json = "{ \"uuid\": \"" + uuid + "\", \"status\": \"offline\" }";
 
             HttpRequest request = HttpRequest.newBuilder()
@@ -114,9 +96,7 @@ public class OnlineApi implements ClientModInitializer {
                 .build();
 
             httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenAccept(response -> {
-                    LogUtils.getLogger().info("Offline status set. Response: {}", response.statusCode());
-                });
+                .thenAccept(response -> LogUtils.getLogger().info("Offline status set. Response: {}", response.statusCode()));
         } catch (Exception e) {
             LogUtils.getLogger().error("Failed to set offline status: {}", e.getMessage());
         }
@@ -124,25 +104,14 @@ public class OnlineApi implements ClientModInitializer {
 
     private void fetchOnlinePlayers() {
         try {
-            LogUtils.getLogger().info("Fetching online players...");
             String response = Http.get(API_URL + "/online").sendString();
-
-            if (response == null || response.isEmpty()) {
-                LogUtils.getLogger().warn("Received null or empty response from API");
-                return;
-            }
-
-            LogUtils.getLogger().info("API Response: {}", response);
+            if (response == null || response.isEmpty()) return;
 
             JsonArray jsonArray = JsonParser.parseString(response).getAsJsonArray();
 
             synchronized (onlinePlayers) {
                 onlinePlayers.clear();
-                jsonArray.forEach(element -> {
-                    String uuid = element.getAsJsonObject().get("uuid").getAsString();
-                    onlinePlayers.add(uuid);
-                });
-                LogUtils.getLogger().info("Fetched {} online players", onlinePlayers.size());
+                jsonArray.forEach(element -> onlinePlayers.add(element.getAsJsonObject().get("uuid").getAsString()));
             }
         } catch (Exception e) {
             LogUtils.getLogger().error("Failed to fetch online players: {}", e.getMessage(), e);
@@ -150,7 +119,6 @@ public class OnlineApi implements ClientModInitializer {
     }
 
     private void onShutdown(MinecraftClient client) {
-        LogUtils.getLogger().info("Client shutting down...");
         stopOnlineTracking();
     }
 

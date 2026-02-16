@@ -5,7 +5,9 @@
   "name": "Amethyst",
   "description": "General utility mod for Dupe Anarchy | Probably does something.",
   "authors": [
-    "nyphrux"
+    "nyphrux",
+    "Ruttyboyz",
+    "Contributors"
   ],
   "icon": "assets/amethyst/icon.png",
   "environment": "client",
